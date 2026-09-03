@@ -112,6 +112,15 @@
     50%{ opacity:1; transform:scale(1.15) rotate(15deg); }
   }
   .levelup-sparkle{ position:absolute; animation:sparkleTwinkle 1.4s ease-in-out infinite; }
+  @keyframes boxBounce{ 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-8px) scale(1.05); } }
+  .levelup-box{ font-size:96px; cursor:pointer; animation:boxBounce 1s ease-in-out infinite; user-select:none; }
+  @keyframes boxOpenPunch{
+    0%{ transform:scale(1) rotate(0deg); opacity:1; }
+    30%{ transform:scale(1.2) rotate(-10deg); opacity:1; }
+    60%{ transform:scale(.85) rotate(8deg); opacity:1; }
+    100%{ transform:scale(.3) rotate(0deg); opacity:0; }
+  }
+  .levelup-box-open{ animation:boxOpenPunch .35s ease-in forwards; }
   .empty-state{ text-align:center; color:var(--sub); padding:40px 20px; }
   .star-row{ display:flex; gap:6px; margin-top:12px; }
   .fixed-footer{
@@ -989,20 +998,39 @@ function showLevelUpOverlay(newStage){
   overlay.id = "levelUpOverlay";
   overlay.style.cssText = "position:fixed; inset:0; background:rgba(20,22,28,0.82); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; animation:fadeIn .25s ease-out;";
   overlay.innerHTML = `
-    <div style="position:relative; width:180px; height:180px; display:flex; align-items:center; justify-content:center;" class="pop">
-      ${sparkles}
-      <div style="position:relative; z-index:1;">${renderCharacterSVG(newStage, 140)}</div>
+    <div id="levelUpStage" style="position:relative; width:180px; height:180px; display:flex; align-items:center; justify-content:center;">
+      <div class="levelup-box" id="levelUpBox">🎁</div>
     </div>
-    <div style="color:#fff; font-size:26px; font-weight:800; margin-top:18px; letter-spacing:.02em;">🎉 레벨업!</div>
-    <div style="color:#fff; font-size:16px; margin-top:6px; opacity:.9;">${characterStageLabel(newStage)}로 진화했어!</div>
-    <div style="color:rgba(255,255,255,.6); font-size:12px; margin-top:20px;">탭하면 닫혀요</div>
+    <div id="levelUpHint" style="color:#fff; font-size:15px; margin-top:22px; opacity:.85;">탭해서 열어보세요</div>
   `;
+
+  let opened = false;
+  const openBox = () => {
+    opened = true;
+    const box = document.getElementById("levelUpBox");
+    box.classList.add("levelup-box-open");
+    document.getElementById("levelUpHint").remove();
+    setTimeout(() => {
+      const stage = document.getElementById("levelUpStage");
+      stage.innerHTML = `
+        ${sparkles}
+        <div style="position:relative; z-index:1;" class="pop">${renderCharacterSVG(newStage, 140)}</div>
+      `;
+      stage.insertAdjacentHTML("afterend", `
+        <div style="color:#fff; font-size:26px; font-weight:800; margin-top:18px; letter-spacing:.02em;" class="pop">🎉 레벨업!</div>
+        <div style="color:#fff; font-size:16px; margin-top:6px; opacity:.9;">${characterStageLabel(newStage)}로 진화했어!</div>
+        <div style="color:rgba(255,255,255,.6); font-size:12px; margin-top:20px;">탭하면 닫혀요</div>
+      `);
+    }, 320);
+  };
   const dismiss = () => {
     if(!overlay.parentNode) return;
     overlay.style.animation = "fadeOut .2s ease-in forwards";
     setTimeout(() => overlay.remove(), 200);
   };
-  overlay.addEventListener("click", dismiss);
+  overlay.addEventListener("click", () => {
+    if(!opened){ openBox(); } else { dismiss(); }
+  });
   document.body.appendChild(overlay);
 }
 
