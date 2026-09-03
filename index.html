@@ -105,6 +105,13 @@
   .progress-label{ font-size:13px; color:var(--sub); white-space:nowrap; }
   @keyframes popIn{ 0%{transform:scale(.6); opacity:0;} 60%{transform:scale(1.12);} 100%{transform:scale(1); opacity:1;} }
   .pop{ animation:popIn .5s ease-out; }
+  @keyframes fadeIn{ 0%{opacity:0;} 100%{opacity:1;} }
+  @keyframes fadeOut{ 0%{opacity:1;} 100%{opacity:0;} }
+  @keyframes sparkleTwinkle{
+    0%,100%{ opacity:0; transform:scale(.4) rotate(0deg); }
+    50%{ opacity:1; transform:scale(1.15) rotate(15deg); }
+  }
+  .levelup-sparkle{ position:absolute; animation:sparkleTwinkle 1.4s ease-in-out infinite; }
   .empty-state{ text-align:center; color:var(--sub); padding:40px 20px; }
   .star-row{ display:flex; gap:6px; margin-top:12px; }
   .fixed-footer{
@@ -898,6 +905,7 @@ function renderPracticeCard(){
 
       let msg;
       session.answered += 1;
+      const prevStage = characterStage(state.totalStars || 0);
       if(isLearn){
         const justMastered = answerWord(w.id, correct);
         if(correct){ session.correct += 1; state.totalStars += 1; state.today.correct += 1; }
@@ -937,6 +945,10 @@ function renderPracticeCard(){
           <button class="btn" id="btnAdvance">다음</button>
         </div></div>
       `);
+      const newStage = characterStage(state.totalStars || 0);
+      if(isLearn && newStage > prevStage){
+        showLevelUpOverlay(newStage);
+      }
       document.getElementById("btnAdvance").onclick = () => {
         session.idx += 1; session.locked = false;
         renderPracticeCard();
@@ -957,6 +969,41 @@ function finishSession(){
   }
   view = "sessionEnd";
   render();
+}
+
+/* ===================== 레벨업 연출(진화 단계가 오른 순간) ===================== */
+function showLevelUpOverlay(newStage){
+  const sparklePositions = [
+    {top:"6%", left:"14%", delay:"0s", size:"22px"},
+    {top:"10%", left:"78%", delay:".15s", size:"18px"},
+    {top:"70%", left:"10%", delay:".3s", size:"20px"},
+    {top:"76%", left:"82%", delay:".45s", size:"24px"},
+    {top:"4%", left:"48%", delay:".6s", size:"16px"},
+    {top:"82%", left:"46%", delay:".75s", size:"18px"}
+  ];
+  const sparkles = sparklePositions.map(p =>
+    `<span class="levelup-sparkle" style="top:${p.top}; left:${p.left}; font-size:${p.size}; animation-delay:${p.delay};">✨</span>`
+  ).join("");
+
+  const overlay = document.createElement("div");
+  overlay.id = "levelUpOverlay";
+  overlay.style.cssText = "position:fixed; inset:0; background:rgba(20,22,28,0.82); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; animation:fadeIn .25s ease-out;";
+  overlay.innerHTML = `
+    <div style="position:relative; width:180px; height:180px; display:flex; align-items:center; justify-content:center;" class="pop">
+      ${sparkles}
+      <div style="position:relative; z-index:1;">${renderCharacterSVG(newStage, 140)}</div>
+    </div>
+    <div style="color:#fff; font-size:26px; font-weight:800; margin-top:18px; letter-spacing:.02em;">🎉 레벨업!</div>
+    <div style="color:#fff; font-size:16px; margin-top:6px; opacity:.9;">${characterStageLabel(newStage)}로 진화했어!</div>
+    <div style="color:rgba(255,255,255,.6); font-size:12px; margin-top:20px;">탭하면 닫혀요</div>
+  `;
+  const dismiss = () => {
+    if(!overlay.parentNode) return;
+    overlay.style.animation = "fadeOut .2s ease-in forwards";
+    setTimeout(() => overlay.remove(), 200);
+  };
+  overlay.addEventListener("click", dismiss);
+  document.body.appendChild(overlay);
 }
 
 /* ===================== 히든 연출: 전체 마스터 ===================== */
