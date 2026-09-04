@@ -94,8 +94,9 @@
   }
   .speak-btn:active{ opacity:.7; }
   .speak-btn-sm{
-    background:none; border:none; color:var(--accent); font-size:15px; cursor:pointer;
+    background:none; border:none; color:var(--accent); cursor:pointer;
     padding:2px 4px; margin-left:2px; vertical-align:middle;
+    display:inline-flex; align-items:center;
   }
   .speak-btn-sm:active{ opacity:.6; }
   .word-meaning{ font-size:20px; font-weight:700; margin:6px 0; }
@@ -767,6 +768,21 @@ function getBestJapaneseVoice(){
 if("speechSynthesis" in window){
   window.speechSynthesis.onvoiceschanged = () => { cachedJaVoice = null; };
 }
+function iconSpeaker(size){
+  size = size || 16;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+    <path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/>
+    <path d="M15.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M18 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0.55"/>
+  </svg>`;
+}
+function iconPause(size){
+  size = size || 14;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block; flex-shrink:0;">
+    <rect x="5.5" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+    <rect x="14.5" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+  </svg>`;
+}
 function speakJapanese(text){
   try{
     if(!("speechSynthesis" in window)) return;
@@ -937,7 +953,7 @@ function renderPracticeCard(){
       <span class="word-pos">${w.pos}</span>
       <div class="word-jp-row">
         <div class="word-jp">${escapeHtml(w.jp)}</div>
-        <button class="speak-btn" id="speakWordBtn" aria-label="발음 듣기">🔊</button>
+        <button class="speak-btn" id="speakWordBtn" aria-label="발음 듣기">${iconSpeaker(16)}</button>
       </div>
       <p class="sub" id="questionLine">뜻은 무엇일까요?</p>
       ${isLearn ? `<div id="starRow">${renderStars(c.correctCount, MASTERY_THRESHOLD, false)}</div>` : ""}
@@ -994,7 +1010,7 @@ function renderPracticeCard(){
         `<span style="color:${correct?"var(--correct)":"var(--wrong)"}; font-weight:700;">${msg}</span>`;
       document.getElementById("feedbackArea").innerHTML = `
         <div class="example-box">
-          <div class="example-jp">${w.ex_jp}<button class="speak-btn-sm" id="speakExampleBtn" aria-label="발음 듣기">🔊</button></div>
+          <div class="example-jp">${w.ex_jp}<button class="speak-btn-sm" id="speakExampleBtn" aria-label="발음 듣기">${iconSpeaker(13)}</button></div>
           <div class="example-ko">${escapeHtml(w.ex_ko)}</div>
         </div>
         <div class="footer-spacer"></div>
@@ -1124,7 +1140,7 @@ function renderSessionEnd(){
 function topBar(idx){
   return `
     <div class="progress-row">
-      <button class="pause-btn" onclick="exitSession()">⏸ 잠시 쉬기</button>
+      <button class="pause-btn" onclick="exitSession()">${iconPause(13)}잠시 쉬기</button>
       <div class="progress-label" style="flex:1; text-align:right;">${idx+1}번째 문제</div>
     </div>
   `;
